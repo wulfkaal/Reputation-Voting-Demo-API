@@ -7,6 +7,16 @@ const proposalsController = require('./controllers/proposals')
 
 const config = require('config');
 
+var mongo = require('mongodb');
+var monk = require('monk');
+var db = monk('localhost:27017/semadaweb');
+
+// Make our db accessible to our router
+app.use(function(req,res,next){
+    req.db = db;
+    next();
+});
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
