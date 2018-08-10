@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const proposalService = require('../services/proposals')
 
-router.get('/proposals/:daoId', proposalService.getAll)
+router.get('/dao/:daoId', proposalService.getAll)
 
 router.get('/:id', proposalService.get)
 
