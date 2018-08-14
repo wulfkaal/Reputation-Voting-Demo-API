@@ -4,8 +4,9 @@ const proposals = {
     var db = req.db;
     var collection = db.get('proposals');
     collection.find({_id:req.params.id},{},function(e,docs){
+        let result = docs.length ? docs[0] : {}
         res.status(200).send({
-            "proposals" : docs
+            ...result
         });
     });
   },
@@ -34,9 +35,18 @@ const proposals = {
     });
   },
   update: async (req, res) => {
-    await proposalDataAccess.update(req.body)
-    
-    res.status(200).send()
+    var db = req.db;
+    var collection = db.get('proposals');
+        
+    collection.update({_id: req.body._id}, req.body, function (err, doc) {
+        if (err) {
+            // If it failed, return error
+            res.send("There was a problem updating the information in the database.");
+        }
+        else {
+            res.status(200).send(doc);
+        }
+    });
   },
   delete: async (req, res) => {
     await proposalDataAccess.delete(req.params.id)
