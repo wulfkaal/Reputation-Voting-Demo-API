@@ -1,9 +1,9 @@
-const proposals = {
+const users = {
 
   get: async (req, res) => {
     var db = req.db;
-    var collection = db.get('proposals');
-    collection.find({_id:req.params.id},{},function(e,docs){
+    var collection = db.get('users');
+    collection.find({email: req.params.email},{},function(e,docs){
         let result = docs.length ? docs[0] : {}
         res.status(200).send({
             ...result
@@ -12,16 +12,16 @@ const proposals = {
   },
   getAll: async (req, res) => {
     var db = req.db;
-    var collection = db.get('proposals');
-    collection.find({daoId:req.params.daoId},{},function(e,docs){
+    var collection = db.get('users');
+    collection.find({},{},function(e,docs){
         res.status(200).send({
-            "proposallist" : docs
+            "users" : docs
         });
     });
   },
   create: async (req, res) => {
     var db = req.db;
-    var collection = db.get('proposals');
+    var collection = db.get('users');
     collection.insert(req.body , function (err, doc) {
         if (err) {
             // If it failed, return error
@@ -34,9 +34,8 @@ const proposals = {
   },
   update: async (req, res) => {
     var db = req.db;
-    var collection = db.get('proposals');
-        
-    collection.update({_id: req.body._id}, req.body, function (err, doc) {
+    var collection = db.get('users');       
+    collection.update({email: req.body.email}, req.body, function (err, doc) {
         if (err) {
             // If it failed, return error
             res.send("There was a problem updating the information in the database.");
@@ -53,4 +52,4 @@ const proposals = {
   }
 }
 
-module.exports = proposals
+module.exports = users

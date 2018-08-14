@@ -4,6 +4,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors');
 const proposalsController = require('./controllers/proposals')
+const usersController = require('./controllers/users')
 
 const config = require('config');
 
@@ -41,6 +42,7 @@ authCheck.push((req, res, next) => {
 })
 
 app.use('/proposals', authCheck, proposalsController)
+app.use('/users', authCheck, usersController)
 
 //NOTE: order of the 404 and error handlers below matters.
 //These must come after all other middleware and route handlers, and in this order.
