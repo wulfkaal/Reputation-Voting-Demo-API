@@ -13,9 +13,10 @@ const proposals = {
   getAll: async (req, res) => {
     var db = req.db;
     var collection = db.get('proposals');
-    collection.find({daoId:req.params.daoId},{},function(e,docs){
+    
+    collection.find({daoId:parseInt(req.params.daoId)},{},function(e,docs){
         res.status(200).send({
-            "proposallist" : docs
+            proposals: docs
         });
     });
   },
