@@ -8,7 +8,7 @@ router.get('/', userService.getAll)
 
 router.post('/', userService.create)
 
-router.put('/', userService.update)
+router.put('/:id', userService.update)
 
 router.delete('/', userService.delete)
 

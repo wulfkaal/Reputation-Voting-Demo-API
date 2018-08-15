@@ -35,7 +35,7 @@ const users = {
   update: async (req, res) => {
     var db = req.db;
     var collection = db.get('users');       
-    collection.update({email: req.body.email}, req.body, function (err, doc) {
+    collection.update({_id: req.params.id}, req.body, function (err, doc) {
         if (err) {
             // If it failed, return error
             res.send("There was a problem updating the information in the database.");
