@@ -1,4 +1,5 @@
 const MongoClient = require('mongodb').MongoClient;
+const {ObjectID} = require('mongodb')
 
 const users = {
 
@@ -18,7 +19,9 @@ const users = {
 
   },
   update: async (req, res) => {   
-    req.db.collection('proposals').updateOne({_id: req.params.id}, {$set: req.body}, function (err, r) {
+    let obj = {...req.body}
+    delete obj._id
+    req.db.collection('users').updateOne({_id: ObjectID(req.params.id)}, {$set: obj}, function (err, r) {
         if (err) {
             // If it failed, return error
             res.send("There was a problem updating the information in the database.");

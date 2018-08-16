@@ -1,4 +1,5 @@
 const MongoClient = require('mongodb').MongoClient;
+const {ObjectID} = require('mongodb')
 
 const proposals = {
 
@@ -32,7 +33,9 @@ const proposals = {
     })
   },
   update: async (req, res) => {
-    req.db.collection('proposals').updateOne({_id: req.body._id}, {$set: req.body}, (err, r) => {
+    let obj = {...req.body}
+    delete obj._id
+    req.db.collection('proposals').updateOne({_id: ObjectID(req.params.id)}, {$set: obj}, (err, r) => {
       if (err) {
         // If it failed, return error
         res.send("There was a problem updating the information in the database.");
