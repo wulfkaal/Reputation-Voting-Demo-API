@@ -23,7 +23,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // var whitelist = [config.get('app.origin')]
-var whitelist = [process.env.SEMADA_APP_ORIGIN]
+var whitelist = [process.env.SEMADA_APP_ORIGIN, '184.23.241.229']
 const corsOptions = {
   origin: whitelist,
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
