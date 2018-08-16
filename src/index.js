@@ -2,7 +2,7 @@ const http = require('http');
 const app = require('./app')
 require('dotenv').config()
 
-var port = normalizePort(process.env.SEMADA_PORT);
+var port = normalizePort(process.env.PORT || process.env.SEMADA_PORT);
 app.set('port', port);
 
 var server = http.createServer(app);
