@@ -6,17 +6,18 @@ const cors = require('cors');
 const proposalsController = require('./controllers/proposals')
 const usersController = require('./controllers/users')
 require('dotenv').config()
-var mongo = require('mongodb');
-var monk = require('monk');
+const MongoClient = require('mongodb').MongoClient;
 
-var db = monk(process.env.SEMADA_DB);
+let globalDB
 
-
+MongoClient.connect(process.env.SEMADA_DB, function(err, client) {
+  globalDB = client.db("semadaweb")
+})
 
 // Make our db accessible to our router
 app.use(function(req,res,next){
-    req.db = db;
-    next();
+  req.db = globalDB
+  next();
 });
 
 app.use(bodyParser.json());

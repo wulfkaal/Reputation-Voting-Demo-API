@@ -1,54 +1,35 @@
+const MongoClient = require('mongodb').MongoClient;
+
 const users = {
 
   get: async (req, res) => {
-    var db = req.db;
-    var collection = db.get('users');
-    collection.find({email: req.params.email},{},function(e,docs){
+     const collection = req.db.collection("users").find({email: req.params.email})
+      .toArray((err, docs) => {
         let result = docs.length ? docs[0] : {}
         res.status(200).send({
             ...result
         });
-    });
+      })
   },
   getAll: async (req, res) => {
-    var db = req.db;
-    var collection = db.get('users');
-    collection.find({},{},function(e,docs){
-        res.status(200).send({
-            "users" : docs
-        });
-    });
+
   },
   create: async (req, res) => {
-    var db = req.db;
-    var collection = db.get('users');
-    collection.insert(req.body , function (err, doc) {
-        if (err) {
-            // If it failed, return error
-            res.send("There was a problem adding the information to the database.");
-        }
-        else {
-            res.status(200).send(doc);
-        }
-    });
+
   },
-  update: async (req, res) => {
-    var db = req.db;
-    var collection = db.get('users');       
-    collection.update({_id: req.params.id}, req.body, function (err, doc) {
+  update: async (req, res) => {   
+    req.db.collection('proposals').updateOne({_id: req.params.id}, {$set: req.body}, function (err, r) {
         if (err) {
             // If it failed, return error
             res.send("There was a problem updating the information in the database.");
         }
         else {
-            res.status(200).send(doc);
+            res.status(200).send(req.body);
         }
     });
   },
   delete: async (req, res) => {
-    await proposalDataAccess.delete(req.params.id)
-    
-    res.status(200).send(req.params.id)
+
   }
 }
 
