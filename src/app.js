@@ -5,12 +5,13 @@ const app = express()
 const cors = require('cors');
 const proposalsController = require('./controllers/proposals')
 const usersController = require('./controllers/users')
-
-const config = require('config');
-
+require('dotenv').config()
 var mongo = require('mongodb');
 var monk = require('monk');
-var db = monk('localhost:27017/semadaweb');
+
+var db = monk(process.env.SEMADA_DB);
+
+
 
 // Make our db accessible to our router
 app.use(function(req,res,next){
@@ -21,7 +22,8 @@ app.use(function(req,res,next){
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-var whitelist = [config.get('app.origin')]
+// var whitelist = [config.get('app.origin')]
+var whitelist = [process.env.SEMADA_APP_ORIGIN]
 const corsOptions = {
   origin: whitelist,
   optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204

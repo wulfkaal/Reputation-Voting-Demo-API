@@ -1,8 +1,8 @@
 const http = require('http');
-const config = require('config');
 const app = require('./app')
+require('dotenv').config()
 
-var port = normalizePort(process.env.PORT || config.get('app.port'));
+var port = normalizePort(process.env.SEMADA_PORT);
 app.set('port', port);
 
 var server = http.createServer(app);
