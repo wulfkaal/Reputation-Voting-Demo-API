@@ -4,7 +4,7 @@ const {ObjectID} = require('mongodb')
 const proposals = {
 
   get: async (req, res) => {
-    const collection = req.db.collection("proposals").find({_id:req.params.id})
+    const collection = req.db.collection("proposals").find({_id: ObjectID(req.params.id)})
     .toArray((err, docs) => {
       let result = docs.length ? docs[0] : {}
       res.status(200).send({
