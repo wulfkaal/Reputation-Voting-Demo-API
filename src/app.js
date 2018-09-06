@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const express = require('express')
 const app = express()
 const cors = require('cors');
+const daosController = require('./controllers/daos')
 const proposalsController = require('./controllers/proposals')
 const usersController = require('./controllers/users')
 require('dotenv').config()
@@ -44,6 +45,7 @@ authCheck.push((req, res, next) => {
   next()
 })
 
+app.use('/daos', authCheck, daosController)
 app.use('/proposals', authCheck, proposalsController)
 app.use('/users', authCheck, usersController)
 
