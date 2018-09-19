@@ -2,6 +2,9 @@
 const bodyParser = require('body-parser');
 const express = require('express')
 const app = express()
+const jwt = require('express-jwt');
+const jwtAuthz = require('express-jwt-authz');
+const jwksRsa = require('jwks-rsa');
 const cors = require('cors');
 const daosController = require('./controllers/daos')
 const proposalsController = require('./controllers/proposals')
@@ -34,6 +37,19 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+
+const checkJwt = jwt({
+  secret: jwksRsa.expressJwtSecret({
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
+    jwksUri: process.env.SEMADA_AUTH0_JWKS_URI
+  }),
+  audience: process.env.SEMADA_API_IDENTIFIER,
+  issuer: process.env.SEMADA_AUTH0_DOMAIN,
+  algorithms: ['RS256']
+});
+
 //authCheck middleware handles retrieving a valid user from the database.
 //for test cases the user is based on a header value, otherwise based on an Auth0 user
 //a user will be available in all router actions as "req.user" and queries can be done with "req.user.id" in where clause.
@@ -45,9 +61,10 @@ authCheck.push((req, res, next) => {
   next()
 })
 
-app.use('/daos', authCheck, daosController)
-app.use('/proposals', authCheck, proposalsController)
-app.use('/users', authCheck, usersController)
+app.use('/daos', authCheck, checkJwt, daosController)
+app.use('/proposals', authCheck, checkJwt, proposalsController)
+app.use('/users', authCheck, checkJwt, usersController)
+
 
 //NOTE: order of the 404 and error handlers below matters.
 //These must come after all other middleware and route handlers, and in this order.

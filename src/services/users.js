@@ -13,7 +13,7 @@ const users = {
       })
   },
   getAll: async (req, res) => {
-
+    
   },
   create: async (req, res) => {
 
