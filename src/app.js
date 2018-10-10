@@ -3,8 +3,10 @@ const bodyParser = require('body-parser');
 const express = require('express')
 const app = express()
 const cors = require('cors');
+const daosController = require('./controllers/daos')
 const proposalsController = require('./controllers/proposals')
 const usersController = require('./controllers/users')
+const contractsController = require('./controllers/contracts')
 require('dotenv').config()
 const MongoClient = require('mongodb').MongoClient;
 
@@ -44,8 +46,10 @@ authCheck.push((req, res, next) => {
   next()
 })
 
+app.use('/daos', authCheck, daosController)
 app.use('/proposals', authCheck, proposalsController)
 app.use('/users', authCheck, usersController)
+app.use('/contracts', authCheck, contractsController)
 
 //NOTE: order of the 404 and error handlers below matters.
 //These must come after all other middleware and route handlers, and in this order.
