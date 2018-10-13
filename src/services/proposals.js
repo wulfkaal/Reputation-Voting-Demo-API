@@ -14,7 +14,7 @@ const proposals = {
        
   },
   getAll: async (req, res) => {
-     const collection = req.db.collection("proposals").find({daoId:parseInt(req.params.daoId)})
+     const collection = req.db.collection("proposals").find({daoId: req.params.daoId})
       .toArray((err, docs) => {
         res.status(200).send({
             proposals: docs
