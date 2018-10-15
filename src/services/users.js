@@ -9,9 +9,7 @@ const users = {
      const collection = req.db.collection("users").find({email: req.params.email})
       .toArray((err, docs) => {
         let result = docs.length ? docs[0] : {}
-        res.status(200).send({
-            ...result
-        });
+        res.status(200).send(result);
       })
   },
   getByPublicAddress: async(req, res) => {
