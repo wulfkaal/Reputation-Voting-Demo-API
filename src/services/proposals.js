@@ -13,6 +13,18 @@ const proposals = {
     })
        
   },
+  getGreatestIndex: async (req, res) => {
+     const collection = req.db.collection("proposals").find({})
+      .toArray((err, docs) => {
+        res.status(200).send({
+            greatestProposalIndex: docs
+                  .filter(proposal => proposal.proposalIndex)
+                  .reduce((greatest, proposal) => { 
+                    return (greatest || 0) > parseInt(proposal.proposalIndex) ? greatest : parseInt(proposal.proposalIndex) 
+                  }, {})
+        });
+      })
+  },
   getAll: async (req, res) => {
      const collection = req.db.collection("proposals").find({daoId: req.params.daoId})
       .toArray((err, docs) => {
