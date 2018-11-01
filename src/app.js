@@ -2,9 +2,6 @@
 const bodyParser = require('body-parser');
 const express = require('express')
 const app = express()
-const jwt = require('express-jwt');
-const jwtAuthz = require('express-jwt-authz');
-const jwksRsa = require('jwks-rsa');
 const cors = require('cors');
 const daosController = require('./controllers/daos')
 const proposalsController = require('./controllers/proposals')
@@ -36,19 +33,6 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions));
-
-
-const checkJwt = jwt({
-  secret: jwksRsa.expressJwtSecret({
-    cache: true,
-    rateLimit: true,
-    jwksRequestsPerMinute: 5,
-    jwksUri: process.env.SEMADA_AUTH0_JWKS_URI
-  }),
-  audience: process.env.SEMADA_API_IDENTIFIER,
-  issuer: process.env.SEMADA_AUTH0_DOMAIN,
-  algorithms: ['RS256']
-});
 
 //authCheck middleware handles retrieving a valid user from the database.
 //for test cases the user is based on a header value, otherwise based on an Auth0 user
