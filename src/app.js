@@ -45,9 +45,9 @@ authCheck.push((req, res, next) => {
   next()
 })
 
-app.use('/daos', authCheck, checkJwt, daosController)
-app.use('/proposals', authCheck, checkJwt, proposalsController)
-app.use('/users', authCheck, checkJwt, usersController)
+app.use('/daos', authCheck, daosController)
+app.use('/proposals', authCheck, proposalsController)
+app.use('/users', authCheck, usersController)
 
 //NOTE: order of the 404 and error handlers below matters.
 //These must come after all other middleware and route handlers, and in this order.
