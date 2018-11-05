@@ -6,6 +6,8 @@ router.get('/dao/:daoId', proposalService.getAll)
 
 router.get('/:id', proposalService.get)
 
+router.get('/', proposalService.getGreatestIndex)
+
 router.post('/', proposalService.create)
 
 router.put('/:id', proposalService.update)
