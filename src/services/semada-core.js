@@ -58,8 +58,10 @@ const semadaCore = {
       .find({_id: ObjectID(req.params.tokenNumberIndex)})
     .toArray((err, docs) => {
       let result = docs.length ? docs[0] : {}
+      let rep = result.balances[req.params.account] ? 
+        result.balances[req.params.account].rep : 0
       res.status(200).send({
-          balance: result.balances[req.params.account].rep || 0
+          balance: rep
       });
     })
   },
