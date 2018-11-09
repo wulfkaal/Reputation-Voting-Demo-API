@@ -74,7 +74,7 @@ const users = {
         }
         else {
           user = docs[0]
-          console.log(user)
+          
           const msg = `I am signing my one-time nonce: ${user.nonce}`;
           const msgBuffer = ethUtil.toBuffer(msg);
           const msgHash = ethUtil.hashPersonalMessage(msgBuffer);
@@ -88,8 +88,7 @@ const users = {
           );
           const addressBuffer = ethUtil.publicToAddress(publicKey);
           const address = ethUtil.bufferToHex(addressBuffer);
-          console.log("address " + address)
-          console.log("public address " + obj.publicAddress.toLowerCase())
+          
           if (address.toLowerCase() !== obj.publicAddress.toLowerCase()) {
             return res
               .status(401)
@@ -127,7 +126,7 @@ const users = {
             });
           };
           signFn(obj.publicAddress).then(accessToken => {
-            console.log("accessToken :" + accessToken)
+            
             res.status(200).json({ accessToken })
           });
         }

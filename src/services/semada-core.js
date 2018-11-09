@@ -27,13 +27,13 @@ const semadaCore = {
     
     //reduce SEM balance
     let accountBalance = await req.db.collection("SCbalances")
-      .findOne({account: parseInt(req.body.account)})
-
-    accountBalance.sem -= req.body.sem  
+      .findOne({account: req.body.account})
     
     await req.db.collection('SCbalances').updateOne(
       {account: req.body.account}, 
-      {$set: accountBalance})
+      {$set: {
+        sem: accountBalance.sem - req.body.sem
+      }})
 
 
     //insert proposal
@@ -60,7 +60,8 @@ const semadaCore = {
     
     res.status(200).send({
       tokenNumberIndex: repContract.insertedId.toString(),
-      proposalIndex: proposal.insertedId.toString()
+      proposalIndex: proposal.insertedId.toString(),
+      timeout: timeout
     })
     
   },
@@ -98,7 +99,7 @@ const semadaCore = {
   getSemBalance: async (req, res) => {
     
     const account = await req.db.collection("SCbalances")
-      .findOne({account: parseInt(req.params.account)})
+      .findOne({account: req.params.account})
     
     let sem = account ? account.sem : 0
 
@@ -243,7 +244,7 @@ const semadaCore = {
         salary = (balances[i].rep / rep.totalSupply) * rep.sem
         
         let accountBalance = await req.db.collection("SCbalances")
-          .findOne({account: parseInt(balances[i].account)})
+          .findOne({account: balances[i].account})
         
         if(accountBalance) {
           accountBalance.sem += salary  
@@ -268,19 +269,20 @@ const semadaCore = {
   
   joinDao: async (req, res) => {
     
-    let timeout = 180
+    let now = Math.floor(new Date().getTime()/1000)
+    let timeout = now + 180
     
     let rep = await req.db.collection("SCrepContracts")
       .findOne({_id: ObjectID(req.params.tokenNumberIndex)})
     
     rep.totalSupply += parseInt(req.body.sem)
-    if(rep.balances[req.body.account]){
-      rep.balances[req.body.account]['rep'] += req.body.sem
+    if(rep.balances['semcore']){
+      rep.balances['semcore']['rep'] += req.body.sem
     } else {
       let act = {}
-      act['account'] = req.body.account
+      act['account'] = 'semcore'
       act['rep'] = req.body.sem
-      rep.balances[req.body.account] = act
+      rep.balances['semcore'] = act
     }
     rep.sem += req.body.sem
     
@@ -329,7 +331,10 @@ const semadaCore = {
       ]
     })
 
-    res.status(200).send()
+    res.status(200).send({
+      proposalIndex: proposal.insertedId.toString(),
+      timeout: timeout
+    })
   },
 
   getRepContract: async (req, res) => {
@@ -347,17 +352,18 @@ const semadaCore = {
     let rep = await req.db.collection("SCrepContracts")
       .findOne({_id: ObjectID(req.body.tokenNumberIndex)})
     
-    rep.totalSupply += req.body.sem
+    rep.totalSupply = parseInt(rep.totalSupply) + parseInt(req.body.sem)
     
     if(rep.balances['semcore']){
-      rep.balances['semcore']['rep'] += req.body.sem
+      rep.balances['semcore']['rep'] =
+        parseInt(rep.balances['semcore']['rep']) + parseInt(req.body.sem)
     } else {
       let act = {}
       act['account'] = 'semcore'
       act['rep'] = sem
       rep.balances['semcore'] = act
     }
-    rep.sem += req.body.sem
+    rep.sem = parseInt(rep.sem) + parseInt(req.body.sem)
     
     await req.db.collection('SCrepContracts').updateOne(
       {_id: ObjectID(req.body.tokenNumberIndex)}, 
@@ -367,7 +373,7 @@ const semadaCore = {
       .findOne({account: req.body.account})
     
     if(accountBalance) {
-      accountBalance.sem -= req.body.sem  
+      accountBalance.sem = parseInt(accountBalance.sem) - parseInt(req.body.sem)
       
       await req.db.collection('SCbalances').updateOne(
         {account: req.body.account}, 
@@ -393,18 +399,21 @@ const semadaCore = {
       votes: [
         {
           from: req.body.account,
-          rep: req.body.sem / 2,
+          rep: parseInt(req.body.sem) / 2,
           vote: true         
         },
         {
           from: 'semcore',
-          rep: req.body.sem / 2,
+          rep: parseInt(req.body.sem) / 2,
           vote: false
         }
       ]
     })
     
-    res.status(200).send({proposalIndex: proposal.insertedId.toString()})
+    res.status(200).send({
+      proposalIndex: proposal.insertedId.toString(),
+      timeout: timeout
+    })
   },
 
   mintRep: async (req, res) => {
@@ -430,7 +439,7 @@ const semadaCore = {
       {$set: rep})
       
     let accountBalance = await req.db.collection("SCbalances")
-      .findOne({account: parseInt(req.body.account)})
+      .findOne({account: req.body.account})
 
     accountBalance.sem -= req.body.sem  
     
@@ -465,8 +474,11 @@ const semadaCore = {
       {_id: ObjectID(req.params.proposalIndex)}, 
       {$set: pool})
     
-    rep.balances[req.body.account].rep -= req.body.rep
-    rep.balances['semcore'].rep += req.body.rep
+    rep.balances[req.body.account].rep = 
+      parseInt(rep.balances[req.body.account].rep) - parseInt(req.body.rep)
+    
+    rep.balances['semcore'].rep = 
+      parseInt(rep.balances['semcore'].rep) + parseInt(req.body.rep)
     
     await req.db.collection('SCrepContracts').updateOne(
       {_id: ObjectID(req.body.tokenNumberIndex)}, 
