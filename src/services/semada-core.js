@@ -194,22 +194,31 @@ const semadaCore = {
   },
 
   distributeRep: async (req, res) => {
- 
-    const pool = await req.db.collection("SCproposals")
-      .findOne({_id: ObjectID(req.params.proposalIndex)})
+    let proposalIndex = req.params.proposalIndex
+    let totalRepStaked = req.body.totalRepStaked
+    let yesRepStaked = req.body.yesRepStaked
+    let noSlashRep = req.body.noSlashRep
+    await distRep(req.db, proposalIndex, totalRepStaked, yesRepStaked, noRepStaked, noSlashRep)
+
+    res.status(200).send({})
+  },
+
+  distRep: async(db, proposalIndex, totalRepStaked, yesRepStaked, noRepStaked, noSlashRep) => {
+    const pool = await db.collection("SCproposals")
+      .findOne({_id: ObjectID(proposalIndex)})
       
-    const rep = await req.db.collection("SCrepContracts")
+    const rep = await db.collection("SCrepContracts")
       .findOne({_id: ObjectID(pool.tokenNumberIndex)})
           
-    if(req.body.noSlashRep > 0) {
-      rep.totalSupply -= req.body.noSlashRep
-      rep.balances['semcore']['rep'] -= req.body.noSlashRep
+    if(noSlashRep > 0) {
+      rep.totalSupply -= noSlashRep
+      rep.balances['semcore']['rep'] -= noSlashRep
     }
     
     for(let j = 0; j < pool.votes.length; j++){
       let betAmtWon = 0
-      if(req.body.noSlashRep == 0 && pool.votes[j].vote){
-        betAmtWon = parseFloat(((pool.votes[j].rep / req.body.yesRepStaked) * req.body.totalRepStaked).toFixed(2))
+      if(noSlashRep == 0 && pool.votes[j].vote){
+        betAmtWon = parseFloat(((pool.votes[j].rep / yesRepStaked) * totalRepStaked).toFixed(2))
         rep.balances['semcore']['rep'] -= betAmtWon
         if (rep.balances[pool.votes[j].from]){
           rep.balances[pool.votes[j].from]['rep'] += betAmtWon
@@ -219,11 +228,11 @@ const semadaCore = {
           act['rep'] = betAmtWon
           rep.balances[pool.votes[j].from] = act
         }
-      } else if (req.body.noSlashRep > 0
+      } else if (noSlashRep > 0
           && !pool.votes[j].vote 
           && pool.votes[j].from !== 'semcore'){
         
-        betAmtWon = parseFloat(((pool.votes[j].rep / req.body.noRepStaked) * req.body.totalRepStaked).toFixed(2))
+        betAmtWon = parseFloat(((pool.votes[j].rep / noRepStaked) * totalRepStaked).toFixed(2))
         rep.balances['semcore']['rep'] -= betAmtWon
         if (rep.balances[pool.votes[j].from]){
           rep.balances[pool.votes[j].from]['rep'] += betAmtWon
@@ -233,20 +242,23 @@ const semadaCore = {
           act['rep'] = betAmtWon
           rep.balances[pool.votes[j].from] = act
         }
-
       }
     }
     
     await req.db.collection('SCrepContracts').updateOne(
       {_id: ObjectID(pool.tokenNumberIndex)}, 
       {$set: rep})
-    
-    res.status(200).send({})
   },
   
   distributeSem: async (req, res) => {
-    let rep = await req.db.collection("SCrepContracts")
-      .findOne({_id: ObjectID(req.params.tokenNumberIndex)})
+    let tokenNumberIndex = req.params.tokenNumberIndex
+    await distSem(req.db, tokenNumberIndex)
+    res.status(200).send({})
+  },
+
+  distSem: async(db, tokenNumberIndex) => {
+    let rep = await db.collection("SCrepContracts")
+      .findOne({_id: ObjectID(tokenNumberIndex)})
     let salary = 0
     
     let balances = values(rep.balances)
@@ -255,28 +267,24 @@ const semadaCore = {
       if(balances[i].rep > 0) {
         salary = (balances[i].rep / rep.totalSupply) * rep.sem
         
-        let accountBalance = await req.db.collection("SCbalances")
+        let accountBalance = await db.collection("SCbalances")
           .findOne({account: balances[i].account})
         
         if(accountBalance) {
           accountBalance.sem += salary  
-          
-          await req.db.collection('SCbalances').updateOne(
+          await db.collection('SCbalances').updateOne(
             {account: balances[i].account}, 
             {$set: {
               sem: accountBalance.sem
             }})
         }
-        
       }
     }
     rep.sem = 0
     
-    await req.db.collection('SCrepContracts').updateOne(
-      {_id: ObjectID(req.params.tokenNumberIndex)}, 
+    await db.collection('SCrepContracts').updateOne(
+      {_id: ObjectID(tokenNumberIndex)}, 
       {$set: rep})
-    
-    res.status(200).send({})
   },
   
   joinDao: async (req, res) => {

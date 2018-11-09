@@ -86,7 +86,7 @@ app.use(function(err, req, res, next) {
 //process proposals
 clearInterval(this.timer)
 this.timer = setInterval(() => {
-  handleProposals.process()
+  handleProposals.process(globalDB)
 }, 1000)
 
 module.exports = app
