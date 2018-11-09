@@ -136,48 +136,60 @@ const semadaCore = {
       .findOne({_id: ObjectID(req.params.proposalIndex)})
       
     if(proposal){
-      let status = 1
-      let totalRep = 0
-      let totalYesRep = 0
-      let noSlashRep = 0
-
-      for(let i = 0; i<proposal.votes.length; i++) {
-        totalRep += proposal.votes[i].rep
-        
-        if(proposal.votes[i].vote){
-          totalYesRep += proposal.votes[i].rep
-        } else if (!proposal.votes[i].vote && 
-            proposal.votes[i].from === 'semcore') {
-          noSlashRep += proposal.votes[i].rep
-        }
-      }
-      if(req.params.now >= proposal.timeout){
-        if(totalYesRep >= totalRep / 2){
-          status = 2;
-          noSlashRep = 0;
-        } else {
-          status = 3;
-          totalRep = totalRep - noSlashRep;
-        }
-      } else {
-        if(totalYesRep >= totalRep / 2){
-          //reset as we aren't going to slash rep if YES wins
-          noSlashRep = 0;
-        } else {
-          totalRep = totalRep - noSlashRep;
-        }
-        status = 1;
-      } 
+      
+      let result = proposalVotes(proposal, req.params.now)
       
       res.status(200).send({
-        status: status,
-        totalYesRep: totalYesRep,
-        totalNoRep: totalRep - totalYesRep,
-        noSlashRep: noSlashRep
+        status: result.status,
+        totalYesRep: result.totalYesRep,
+        totalNoRep: result.totalRep - result.totalYesRep,
+        noSlashRep: result.noSlashRep
       })
 
     } else {
       res.status(200).send();
+    }
+  },
+  
+  proposalVotes: async (proposal, now) => {
+    let status = 1
+    let totalRep = 0
+    let totalYesRep = 0
+    let noSlashRep = 0
+
+    for(let i = 0; i<proposal.votes.length; i++) {
+      totalRep += proposal.votes[i].rep
+      
+      if(proposal.votes[i].vote){
+        totalYesRep += proposal.votes[i].rep
+      } else if (!proposal.votes[i].vote && 
+          proposal.votes[i].from === 'semcore') {
+        noSlashRep += proposal.votes[i].rep
+      }
+    }
+    if(now >= proposal.timeout){
+      if(totalYesRep >= totalRep / 2){
+        status = 2;
+        noSlashRep = 0;
+      } else {
+        status = 3;
+        totalRep = totalRep - noSlashRep;
+      }
+    } else {
+      if(totalYesRep >= totalRep / 2){
+        //reset as we aren't going to slash rep if YES wins
+        noSlashRep = 0;
+      } else {
+        totalRep = totalRep - noSlashRep;
+      }
+      status = 1;
+    } 
+    
+    return {
+      status: status,
+      totalRep: totalRep,
+      totalYesRep: totalYesRep,
+      noSlashRep: noSlashRep
     }
   },
 

@@ -7,6 +7,7 @@ const daosController = require('./controllers/daos')
 const proposalsController = require('./controllers/proposals')
 const usersController = require('./controllers/users')
 const semadaCoreController = require('./controllers/semada-core')
+const handleProposals = require('./utils/handle-proposals')
 
 require('dotenv').config()
 const MongoClient = require('mongodb').MongoClient;
@@ -81,5 +82,11 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500).send('Unable to process request');
   // res.render('error');
 });
+
+//process proposals
+clearInterval(this.timer)
+this.timer = setInterval(() => {
+  handleProposals.process()
+}, 1000)
 
 module.exports = app
