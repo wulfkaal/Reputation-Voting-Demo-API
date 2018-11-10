@@ -11,56 +11,44 @@ const handleProposals = {
     4. distribute SEM when timeout
     */
     
-    await db.collection('SCproposals').find({}).toArray(function(err, docs) {
-        let proposals = docs.filter(proposal => {
-                                        return proposal.status===1
-                                   })
-        docs.forEach(async(proposal) => {
-            let now = Math.floor(new Date().getTime()/1000)
-            proposalStatus = await SemadaCore.proposalVotes(proposal, now)
+    let activeProposals = await db.collection('proposals')
+      .find({status: 1})
+      .toArray()
+    
+    activeProposals.forEach(async(proposal) => {
+        let scProposal = await db.collection('SCproposals')
+          .findOne({_id: ObjectID(proposal.proposalIndex)})
+          
+        let now = Math.floor(new Date().getTime()/1000)
+        proposalStatus = await SemadaCore.proposalVotes(scProposal, now)
+        
+        proposal.status = proposalStatus.status
+        proposal.noRepStaked = proposalStatus.totalNoRep
+        proposal.yesRepStaked = proposalStatus.totalYesRep
+        proposal.totalRepStaked = proposal.noRepStaked + proposal.yesRepStaked
+        proposal.noSlashRep = proposalStatus.noSlashRep
+    
+        let remaining = proposal.voteTimeEnd - now
+        remaining = remaining < 0 ? 0 : remaining
+        proposal.voteTimeRemaining = remaining
+        
+        await db.collection('proposals').updateOne(
+            {_id: ObjectID(proposal._id)}, 
+            {$set: proposal})
 
-            proposal.status = proposalStatus.status
-            proposal.noRepStaked = 
-                proposalStatus.totalRep - proposalStatus.totalYesRep
-            proposal.yesRepStaked = proposalStatus.totalYesRep
-            proposal.noSlashRep = proposalStatus.noSlashRep
-
-            let remaining = proposal.timeout - now
-            remaining = remaining < 0 ? 0 : remaining
-            proposal.voteTimeRemaining = remaining
-
-            await db.collection('proposals').find(
-                {proposalIndex: String(proposal._id)})
-                .toArray(async(err, docs) => {
-                    let pro =  docs.length ? docs[0] : {}
-                    pro.status = proposalStatus.status
-                    pro.noRepStaked = 
-                        proposalStatus.totalRep - proposalStatus.totalYesRep
-                    pro.yesRepStaked = proposalStatus.totalYesRep
-                    pro.noSlashRep = proposalStatus.noSlashRep
-                    pro.voteTimeRemaining = remaining
-                    await db.collection('proposals').updateOne(
-                        {_id: ObjectID(pro._id)}, 
-                        {$set: pro}, 
-                        (err, r) => {if(err) return null})
-                })
-            await db.collection('SCproposals').updateOne(
-                {_id: ObjectID(proposal._id)}, 
-                {$set: proposal}, 
-                (err, r) => {if(err) return null})
-            if(proposal.status !== 1 && proposal.proposalIndex) {
-                await SemadaCore.distRep(
-                    db, 
-                    proposal.proposalIndex, 
-                    proposal.yesRepStaked + proposal.noRepStaked, 
-                    proposal.yesRepStaked, 
-                    proposal.noRepStaked, 
-                    proposal.noSlashRep)
-                await SemadaCore.distSem(
-                    db, 
-                    proposal.tokenNumberIndex)
-            }
-        })
+        if(proposal.status !== 1 && proposal.proposalIndex) {
+            console.log(`Distribute REP/SEM: ${proposal.proposalIndex}`)
+            await SemadaCore.distRep(
+                db, 
+                proposal.proposalIndex, 
+                proposalStatus.totalRep,
+                proposal.yesRepStaked, 
+                proposal.noRepStaked - proposal.noSlashRep, 
+                proposal.noSlashRep)
+            await SemadaCore.distSem(
+                db, 
+                proposal.tokenNumberIndex)
+        }
     })
   }
   

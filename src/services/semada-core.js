@@ -8,7 +8,7 @@ const semadaCore = {
   createDao: async (req, res) => {
     
     let now = Math.floor(new Date().getTime()/1000)
-    let timeout = now + 180
+    let timeout = now
     delete req.body.dao._id
     let tokenNumberIndex
     let proposalIndex
@@ -76,7 +76,7 @@ const semadaCore = {
       let rep = result.balances[req.params.account] ? 
         result.balances[req.params.account].rep : 0
       res.status(200).send({
-          balance: rep
+          balance: parseInt(rep)
       });
     })
   },
@@ -130,43 +130,27 @@ const semadaCore = {
     
   },
 
-  getProposalVotes: async (req, res) => {
-    
-    const proposal = await req.db.collection("SCproposals")
-      .findOne({_id: ObjectID(req.params.proposalIndex)})
-      
-    if(proposal){
-      
-      let result = proposalVotes(proposal, req.params.now)
-      
-      res.status(200).send({
-        status: result.status,
-        totalYesRep: result.totalYesRep,
-        totalNoRep: result.totalRep - result.totalYesRep,
-        noSlashRep: result.noSlashRep
-      })
-
-    } else {
-      res.status(200).send();
-    }
-  },
-  
   proposalVotes: async (proposal, now) => {
     let status = 1
     let totalRep = 0
     let totalYesRep = 0
+    let totalNoRep = 0
     let noSlashRep = 0
 
-    for(let i = 0; i<proposal.votes.length; i++) {
-      totalRep += proposal.votes[i].rep
+    for(let vote of proposal.votes) {
+      totalRep += vote.rep
       
-      if(proposal.votes[i].vote){
-        totalYesRep += proposal.votes[i].rep
-      } else if (!proposal.votes[i].vote && 
-          proposal.votes[i].from === 'semcore') {
-        noSlashRep += proposal.votes[i].rep
+      if(vote.vote){
+        totalYesRep += vote.rep
+      } else if (!vote.vote) {
+        totalNoRep += vote.rep
+        
+        if(vote.from === 'semcore') {
+          noSlashRep += vote.rep
+        }
       }
     }
+    // console.log(`VOTES: ${totalRep}, ${totalYesRep}`)
     if(now >= proposal.timeout){
       if(totalYesRep >= totalRep / 2){
         status = 2;
@@ -189,7 +173,29 @@ const semadaCore = {
       status: status,
       totalRep: totalRep,
       totalYesRep: totalYesRep,
+      totalNoRep: totalNoRep,
       noSlashRep: noSlashRep
+    }
+  },
+
+  getProposalVotes: async (req, res) => {
+    
+    const proposal = await req.db.collection("SCproposals")
+      .findOne({_id: ObjectID(req.params.proposalIndex)})
+      
+    if(proposal){
+      
+      let result = await proposalVotes(proposal, req.params.now)
+      
+      res.status(200).send({
+        status: result.status,
+        totalYesRep: result.totalYesRep,
+        totalNoRep: result.totalRep - result.totalYesRep,
+        noSlashRep: result.noSlashRep
+      })
+
+    } else {
+      res.status(200).send();
     }
   },
 
@@ -203,7 +209,14 @@ const semadaCore = {
     res.status(200).send({})
   },
 
-  distRep: async(db, proposalIndex, totalRepStaked, yesRepStaked, noRepStaked, noSlashRep) => {
+  distRep: async(db, 
+    proposalIndex, 
+    totalRepStaked, 
+    yesRepStaked, 
+    noRepStaked, 
+    noSlashRep) => {
+      
+    console.log(totalRepStaked, yesRepStaked, noRepStaked, noSlashRep)
     const pool = await db.collection("SCproposals")
       .findOne({_id: ObjectID(proposalIndex)})
       
@@ -245,7 +258,7 @@ const semadaCore = {
       }
     }
     
-    await req.db.collection('SCrepContracts').updateOne(
+    await db.collection('SCrepContracts').updateOne(
       {_id: ObjectID(pool.tokenNumberIndex)}, 
       {$set: rep})
   },
@@ -367,7 +380,7 @@ const semadaCore = {
   
   newProposal: async (req, res) => {
     let now = Math.floor(new Date().getTime()/1000)
-    let timeout = now + 180
+    let timeout = now + 30
     
     let rep = await req.db.collection("SCrepContracts")
       .findOne({_id: ObjectID(req.body.tokenNumberIndex)})
@@ -479,13 +492,14 @@ const semadaCore = {
     
     let now = Math.floor(new Date().getTime()/1000)
   
-    if (now > pool.timeout && rep.balances[req.body.account].rep < req.body.rep){
+    if (now > pool.timeout && 
+      rep.balances[req.body.account].rep < req.body.rep){
       return
     }
     pool.votes.push(
       {
         from: req.body.account,
-        rep: req.body.rep,
+        rep: parseInt(req.body.rep),
         vote: req.body.vote
       }
     )
