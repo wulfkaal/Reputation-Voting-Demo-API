@@ -204,7 +204,13 @@ const semadaCore = {
     let totalRepStaked = req.body.totalRepStaked
     let yesRepStaked = req.body.yesRepStaked
     let noSlashRep = req.body.noSlashRep
-    await distRep(req.db, proposalIndex, totalRepStaked, yesRepStaked, noRepStaked, noSlashRep)
+    await distRep(
+      req.db, 
+      proposalIndex, 
+      totalRepStaked, 
+      yesRepStaked, 
+      noRepStaked, 
+      noSlashRep)
 
     res.status(200).send({})
   },
@@ -231,7 +237,8 @@ const semadaCore = {
     for(let j = 0; j < pool.votes.length; j++){
       let betAmtWon = 0
       if(noSlashRep == 0 && pool.votes[j].vote){
-        betAmtWon = parseFloat(((pool.votes[j].rep / yesRepStaked) * totalRepStaked).toFixed(2))
+        betAmtWon = parseFloat(
+          ((pool.votes[j].rep / yesRepStaked) * totalRepStaked).toFixed(2))
         rep.balances['semcore']['rep'] -= betAmtWon
         if (rep.balances[pool.votes[j].from]){
           rep.balances[pool.votes[j].from]['rep'] += betAmtWon
@@ -245,7 +252,8 @@ const semadaCore = {
           && !pool.votes[j].vote 
           && pool.votes[j].from !== 'semcore'){
         
-        betAmtWon = parseFloat(((pool.votes[j].rep / noRepStaked) * totalRepStaked).toFixed(2))
+        betAmtWon = parseFloat(
+          ((pool.votes[j].rep / noRepStaked) * totalRepStaked).toFixed(2))
         rep.balances['semcore']['rep'] -= betAmtWon
         if (rep.balances[pool.votes[j].from]){
           rep.balances[pool.votes[j].from]['rep'] += betAmtWon
