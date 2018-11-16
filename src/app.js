@@ -6,6 +6,7 @@ const cors = require('cors');
 const daosController = require('./controllers/daos')
 const proposalsController = require('./controllers/proposals')
 const usersController = require('./controllers/users')
+const notificationsController = require('./controllers/notifications')
 const semadaCoreController = require('./controllers/semada-core')
 const handleProposals = require('./utils/handle-proposals')
 
@@ -52,6 +53,7 @@ app.use('/daos', authCheck, daosController)
 app.use('/proposals', authCheck, proposalsController)
 app.use('/semada-core', authCheck, semadaCoreController)
 app.use('/users', authCheck, usersController)
+app.use('/notifications', authCheck, notificationsController)
 
 
 //NOTE: order of the 404 and error handlers below matters.
