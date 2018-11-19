@@ -4,7 +4,8 @@ const {ObjectID} = require('mongodb')
 const proposals = {
 
   get: async (req, res) => {
-    const collection = req.db.collection("proposals").find({_id: ObjectID(req.params.id)})
+    const collection = req.db.collection("proposals").find(
+      {_id: ObjectID(req.params.id)})
     .toArray((err, docs) => {
       let result = docs.length ? docs[0] : {}
       res.status(200).send({
@@ -20,13 +21,16 @@ const proposals = {
             greatestProposalIndex: docs
                   .filter(proposal => proposal.proposalIndex)
                   .reduce((greatest, proposal) => { 
-                    return (greatest || 0) > parseInt(proposal.proposalIndex) ? greatest : parseInt(proposal.proposalIndex) 
+                    return (greatest || 0) > parseInt(
+                      proposal.proposalIndex) ? greatest : parseInt(
+                      proposal.proposalIndex) 
                   }, {})
         });
       })
   },
   getAll: async (req, res) => {
-     const collection = req.db.collection("proposals").find({daoId: req.params.daoId})
+     const collection = req.db.collection("proposals").find(
+      {daoId: req.params.daoId})
       .toArray((err, docs) => {
         res.status(200).send({
             proposals: docs
@@ -37,7 +41,7 @@ const proposals = {
     req.db.collection('proposals').insertOne(req.body, (err, r) => {
       if (err) {
           // If it failed, return error
-          res.send("There was a problem adding the information to the database.");
+          res.send("There was a problem adding the information to the database")
       }
       else {
           res.status(200).send(req.body);
@@ -47,10 +51,11 @@ const proposals = {
   update: async (req, res) => {
     let obj = {...req.body}
     delete obj._id
-    req.db.collection('proposals').updateOne({_id: ObjectID(req.params.id)}, {$set: obj}, (err, r) => {
+    req.db.collection('proposals').updateOne(
+      {_id: ObjectID(req.params.id)}, {$set: obj}, (err, r) => {
       if (err) {
         // If it failed, return error
-        res.send("There was a problem updating the information in the database.");
+        res.send("There was a problem updating the information in the database")
       }
       else {
         res.status(200).send(req.body);
