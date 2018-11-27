@@ -2,7 +2,9 @@ const express = require('express')
 const router = express.Router()
 const notificationService = require('../services/notifications')
 
-router.get('/:userId', notificationService.getAll)
+router.get('/:email', notificationService.getAll)
+
+router.get('/markasseen/:email', notificationService.markAsSeen)
 
 router.get('/notification/:id', notificationService.get)
 
